@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}公开页 - 黑名单系统{% endblock %}
+{% block content %}
+<main class="hero">
+  <section class="hero-copy">
+    <span class="eyebrow">公开查询与提交</span>
+    <h1>黑名单公开站</h1>
+    <p>举报、查询、申诉集中在一个入口。提交内容进入后台审核，审核通过后自动写入或移出黑名单。</p>
+  </section>
+  <section class="card-grid">
+    <a class="feature-card" href="{{ url_for('report_form') }}">
+      <h2>举报</h2>
+      <p>提交平台、账号 ID、威胁程度、描述和证据，等待管理员审核。</p>
+      <span>进入举报</span>
+    </a>
+    <a class="feature-card" href="{{ url_for('search') }}">
+      <h2>查询</h2>
+      <p>输入平台和账号名，立即检索该对象是否在黑名单中。</p>
+      <span>进入查询</span>
+    </a>
+    <a class="feature-card" href="{{ url_for('appeal_form') }}">
+      <h2>申诉</h2>
+      <p>被误封时提交平台、账号 ID、描述和证据，由管理员复核。</p>
+      <span>进入申诉</span>
+    </a>
+  </section>
+</main>
+{% endblock %}

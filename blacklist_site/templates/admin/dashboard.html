@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}后台管理 - 黑名单系统{% endblock %}
+{% block content %}
+<main class="admin-layout">
+  <header class="admin-header">
+    <div>
+      <span class="eyebrow">审核中心</span>
+      <h1>后台管理页</h1>
+    </div>
+    <form method="post" action="{{ url_for('logout') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="secondary-button" type="submit">退出登录</button>
+    </form>
+  </header>
+
+  <section class="admin-section">
+    <div class="section-title">
+      <h2>待审核举报</h2>
+      <span>{{ reports|length }} 条</span>
+    </div>
+    {% if reports %}
+      <div class="review-grid">
+        {% for report in reports %}
+          <article class="review-card">
+            <h3>#{{ report.id }} {{ report.platform }} / {{ report.account_id }}</h3>
+            <p><strong>威胁程度：</strong>{{ report.threat_level }}</p>
+            <p><strong>描述：</strong>{{ report.description }}</p>
+            <p><strong>证据：</strong>{{ report.evidence }}</p>
+            <p><strong>提交时间：</strong>{{ report.created_at }}</p>
+            <div class="action-row">
+              <form method="post" action="{{ url_for('handle_approve_report', report_id=report.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <textarea name="admin_note" rows="2" placeholder="审核备注（可选）"></textarea>
+                <button class="primary-button" type="submit">通过并加入黑名单</button>
+              </form>
+              <form method="post" action="{{ url_for('handle_reject_report', report_id=report.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <textarea name="admin_note" rows="2" placeholder="驳回原因（可选）"></textarea>
+                <button class="danger-button" type="submit">驳回举报</button>
+              </form>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">当前没有待审核举报。</div>
+    {% endif %}
+  </section>
+
+  <section class="admin-section">
+    <div class="section-title">
+      <h2>待审核申诉</h2>
+      <span>{{ appeals|length }} 条</span>
+    </div>
+    {% if appeals %}
+      <div class="review-grid">
+        {% for appeal in appeals %}
+          <article class="review-card">
+            <h3>#{{ appeal.id }} {{ appeal.platform }} / {{ appeal.account_id }}</h3>
+            <p><strong>描述：</strong>{{ appeal.description }}</p>
+            <p><strong>证据：</strong>{{ appeal.evidence }}</p>
+            <p><strong>提交时间：</strong>{{ appeal.created_at }}</p>
+            <div class="action-row">
+              <form method="post" action="{{ url_for('handle_approve_appeal', appeal_id=appeal.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <textarea name="admin_note" rows="2" placeholder="审核备注（可选）"></textarea>
+                <button class="primary-button" type="submit">通过并移出黑名单</button>
+              </form>
+              <form method="post" action="{{ url_for('handle_reject_appeal', appeal_id=appeal.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <textarea name="admin_note" rows="2" placeholder="驳回原因（可选）"></textarea>
+                <button class="danger-button" type="submit">驳回申诉</button>
+              </form>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">当前没有待审核申诉。</div>
+    {% endif %}
+  </section>
+
+  <section class="admin-section">
+    <div class="section-title">
+      <h2>当前黑名单</h2>
+      <span>{{ blacklist_entries|length }} 条</span>
+    </div>
+    {% if blacklist_entries %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>平台</th>
+              <th>账号 ID</th>
+              <th>威胁程度</th>
+              <th>描述</th>
+              <th>更新时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for entry in blacklist_entries %}
+              <tr>
+                <td>{{ entry.id }}</td>
+                <td>{{ entry.platform }}</td>
+                <td>{{ entry.account_id }}</td>
+                <td>{{ entry.threat_level }}</td>
+                <td>{{ entry.description }}</td>
+                <td>{{ entry.updated_at }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">黑名单当前为空。</div>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}
