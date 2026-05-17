@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from functools import wraps
 
-from flask import Flask, flash, redirect, render_template, request, session, url_for
+from flask import Flask, Response, abort, flash, redirect, render_template, request, session, url_for
 
 from .config import (
     ALLOWED_PLATFORMS,
@@ -20,6 +20,8 @@ from .security import (
     verify_csrf_token,
 )
 from .services import (
+    get_blacklist_entry_image,
+    get_report_image,
     approve_appeal,
     approve_report,
     list_blacklist_entries,
@@ -44,6 +46,7 @@ def create_admin_app() -> Flask:
         return {
             "csrf_token": generate_csrf_token,
             "allowed_platforms": ALLOWED_PLATFORMS,
+            "show_public_nav": False,
         }
 
     @app.after_request
@@ -141,5 +144,21 @@ def create_admin_app() -> Flask:
         verify_csrf_token()
         session.clear()
         return redirect(url_for("login"))
+
+    @app.get("/report-images/<int:image_id>")
+    @login_required
+    def report_image(image_id: int):
+        image = get_report_image(image_id)
+        if not image:
+            abort(404)
+        return Response(image["image_data"], mimetype=image["mime_type"])
+
+    @app.get("/blacklist-images/<int:image_id>")
+    @login_required
+    def blacklist_image(image_id: int):
+        image = get_blacklist_entry_image(image_id)
+        if not image:
+            abort(404)
+        return Response(image["image_data"], mimetype=image["mime_type"])
 
     return app

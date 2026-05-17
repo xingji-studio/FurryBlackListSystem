@@ -10,8 +10,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 DATABASE_PATH = DATA_DIR / "blacklist.db"
 ENV_FILE = BASE_DIR / ".env"
+SPONSOR_IMAGE_PATH = BASE_DIR / "paymefifty.jpg"
 ALLOWED_PLATFORMS = ("QQ", "微信", "B站", "快手", "抖音", "Discord")
 ALLOWED_THREAT_LEVELS = ("低", "中", "高", "严重")
+ALLOWED_IMAGE_MIME_TYPES = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+    "image/gif": ".gif",
+}
+MAX_REPORT_IMAGE_COUNT = 4
+MAX_REPORT_IMAGE_SIZE = 5 * 1024 * 1024
 
 
 def load_env_file() -> None:

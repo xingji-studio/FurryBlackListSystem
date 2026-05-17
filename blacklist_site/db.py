@@ -48,6 +48,26 @@ def init_db() -> None:
                 updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
 
+            CREATE TABLE IF NOT EXISTS report_images (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                report_id INTEGER NOT NULL,
+                mime_type TEXT NOT NULL,
+                filename TEXT NOT NULL,
+                image_data BLOB NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(report_id) REFERENCES reports(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS blacklist_entry_images (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                blacklist_entry_id INTEGER NOT NULL,
+                mime_type TEXT NOT NULL,
+                filename TEXT NOT NULL,
+                image_data BLOB NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(blacklist_entry_id) REFERENCES blacklist_entries(id) ON DELETE CASCADE
+            );
+
             CREATE TABLE IF NOT EXISTS appeals (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 platform TEXT NOT NULL,

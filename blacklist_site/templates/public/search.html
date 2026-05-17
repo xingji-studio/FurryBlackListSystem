@@ -1,11 +1,12 @@
 {% extends "base.html" %}
-{% block title %}查询 - 黑名单系统{% endblock %}
+{% block title %}查询 - 福瑞联合净网行动{% endblock %}
 {% block content %}
 <main class="single-panel">
   <div class="panel-header">
     <a class="text-link" href="{{ url_for('index') }}">返回首页</a>
+    <span class="eyebrow">Archive Lookup</span>
     <h1>黑名单查询</h1>
-    <p>输入平台和账号名，系统会在审核通过的黑名单记录中检索。</p>
+    <p>输入平台和账号名，系统会检索已通过审核的记录，用于快速核验风险对象是否已在案。</p>
   </div>
   <form class="form-panel compact" method="post">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -34,6 +35,16 @@
           <div><dt>描述</dt><dd>{{ result.description }}</dd></div>
           <div><dt>录入时间</dt><dd>{{ result.created_at }}</dd></div>
         </dl>
+        {% if result.image_cards %}
+          <div class="evidence-gallery">
+            {% for image in result.image_cards %}
+              <a class="evidence-thumb" href="{{ url_for('blacklist_image', image_id=image.id) }}" target="_blank" rel="noopener noreferrer">
+                <img src="{{ image.preview_url }}" alt="{{ image.filename }}">
+                <span>{{ image.filename }}</span>
+              </a>
+            {% endfor %}
+          </div>
+        {% endif %}
       </section>
     {% else %}
       <section class="result-panel safe">

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import secrets
 import time
 from collections import deque
@@ -7,7 +8,13 @@ from typing import Any
 
 from flask import abort, request, session
 
-from .config import ALLOWED_PLATFORMS, ALLOWED_THREAT_LEVELS
+from .config import (
+    ALLOWED_IMAGE_MIME_TYPES,
+    ALLOWED_PLATFORMS,
+    ALLOWED_THREAT_LEVELS,
+    MAX_REPORT_IMAGE_COUNT,
+    MAX_REPORT_IMAGE_SIZE,
+)
 
 
 MAX_ACCOUNT_ID_LENGTH = 64
@@ -61,6 +68,40 @@ def validate_evidence(evidence: str) -> str:
     if len(normalized) > MAX_EVIDENCE_LENGTH:
         raise ValueError(f"证据不能超过 {MAX_EVIDENCE_LENGTH} 个字符。")
     return normalized
+
+
+def validate_report_images(files: list[Any]) -> list[dict[str, str | bytes]]:
+    valid_files = [file for file in files if getattr(file, "filename", "")]
+    if len(valid_files) > MAX_REPORT_IMAGE_COUNT:
+        raise ValueError(f"最多只能上传 {MAX_REPORT_IMAGE_COUNT} 张图片。")
+
+    images: list[dict[str, str | bytes]] = []
+    for file in valid_files:
+        mime_type = getattr(file, "mimetype", "")
+        if mime_type not in ALLOWED_IMAGE_MIME_TYPES:
+            raise ValueError("只允许上传 JPG、PNG、WEBP 或 GIF 图片。")
+
+        image_data = file.read()
+        file.stream.seek(0)
+        if not image_data:
+            raise ValueError("上传的图片为空。")
+        if len(image_data) > MAX_REPORT_IMAGE_SIZE:
+            raise ValueError(f"单张图片不能超过 {MAX_REPORT_IMAGE_SIZE // (1024 * 1024)} MB。")
+
+        images.append(
+            {
+                "filename": file.filename,
+                "mime_type": mime_type,
+                "image_data": image_data,
+            }
+        )
+
+    return images
+
+
+def build_image_data_url(mime_type: str, image_data: bytes) -> str:
+    encoded = base64.b64encode(image_data).decode("ascii")
+    return f"data:{mime_type};base64,{encoded}"
 
 
 def generate_csrf_token() -> str:

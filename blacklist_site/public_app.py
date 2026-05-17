@@ -1,21 +1,26 @@
 from __future__ import annotations
 
-from flask import Flask, flash, redirect, render_template, request, url_for
+import mimetypes
 
-from .config import ALLOWED_PLATFORMS, get_secret_key
+from flask import Flask, Response, abort, flash, redirect, render_template, request, url_for
+
+from .config import ALLOWED_PLATFORMS, SPONSOR_IMAGE_PATH, get_secret_key
 from .db import init_db
 from .security import (
     apply_security_headers,
+    build_image_data_url,
     check_rate_limit,
     generate_csrf_token,
     validate_account_id,
     validate_description,
     validate_evidence,
     validate_platform,
+    validate_report_images,
     validate_threat_level,
     verify_csrf_token,
 )
-from .services import create_appeal, create_report, search_blacklist
+from .services import create_appeal, create_report, get_blacklist_entry_image, search_blacklist
+from .services import list_blacklist_entry_images
 
 
 def create_public_app() -> Flask:
@@ -32,6 +37,7 @@ def create_public_app() -> Flask:
         return {
             "csrf_token": generate_csrf_token,
             "allowed_platforms": ALLOWED_PLATFORMS,
+            "show_public_nav": True,
         }
 
     @app.after_request
@@ -57,11 +63,12 @@ def create_public_app() -> Flask:
             threat_level = validate_threat_level(request.form.get("threat_level", ""))
             description = validate_description(request.form.get("description", ""))
             evidence = validate_evidence(request.form.get("evidence", ""))
+            images = validate_report_images(request.files.getlist("images"))
         except ValueError as exc:
             flash(str(exc), "error")
             return redirect(url_for("report_form"))
 
-        create_report(platform, account_id, threat_level, description, evidence)
+        create_report(platform, account_id, threat_level, description, evidence, images)
         flash("举报已提交，等待管理员审核。", "success")
         return redirect(url_for("report_form"))
 
@@ -77,6 +84,16 @@ def create_public_app() -> Flask:
                 platform = validate_platform(request.form.get("platform", ""))
                 account_id = validate_account_id(request.form.get("account_id", ""))
                 result = search_blacklist(platform, account_id)
+                if result:
+                    full_images = list_blacklist_entry_images(result["id"])
+                    result["image_cards"] = [
+                        {
+                            "id": image["id"],
+                            "filename": image["filename"],
+                            "preview_url": build_image_data_url(image["mime_type"], image["image_data"]),
+                        }
+                        for image in full_images
+                    ]
             except ValueError as exc:
                 flash(str(exc), "error")
         return render_template("public/search.html", result=result, searched=searched)
@@ -102,5 +119,19 @@ def create_public_app() -> Flask:
         create_appeal(platform, account_id, description, evidence)
         flash("申诉已提交，等待管理员审核。", "success")
         return redirect(url_for("appeal_form"))
+
+    @app.get("/blacklist-images/<int:image_id>")
+    def blacklist_image(image_id: int):
+        image = get_blacklist_entry_image(image_id)
+        if not image:
+            abort(404)
+        return Response(image["image_data"], mimetype=image["mime_type"])
+
+    @app.get("/sponsor-image")
+    def sponsor_image():
+        if not SPONSOR_IMAGE_PATH.exists():
+            abort(404)
+        mimetype, _ = mimetypes.guess_type(SPONSOR_IMAGE_PATH.name)
+        return Response(SPONSOR_IMAGE_PATH.read_bytes(), mimetype=mimetype or "image/jpeg")
 
     return app
