@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import timedelta
 from functools import wraps
 
 from flask import Flask, Response, abort, flash, redirect, render_template, request, session, url_for
@@ -36,6 +37,7 @@ def create_admin_app() -> Flask:
     app = Flask(__name__, template_folder="templates", static_folder="static")
     app.secret_key = get_secret_key()
     app.config.update(
+        PERMANENT_SESSION_LIFETIME=timedelta(minutes=10),
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Strict",
     )
@@ -58,6 +60,8 @@ def create_admin_app() -> Flask:
         def wrapped(*args, **kwargs):
             if not session.get("admin_logged_in"):
                 return redirect(url_for("login"))
+            session.permanent = True
+            session.modified = True
             return view_func(*args, **kwargs)
 
         return wrapped
@@ -77,6 +81,7 @@ def create_admin_app() -> Flask:
             valid_password = provided_hash == password_hash if password_hash else password == get_admin_password()
             if username == get_admin_username() and valid_password:
                 session.clear()
+                session.permanent = True
                 session["admin_logged_in"] = True
                 return redirect(url_for("dashboard"))
 

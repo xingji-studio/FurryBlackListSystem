@@ -19,8 +19,14 @@ from .security import (
     validate_threat_level,
     verify_csrf_token,
 )
-from .services import create_appeal, create_report, get_blacklist_entry_image, search_blacklist
-from .services import list_blacklist_entry_images
+from .services import (
+    create_appeal,
+    create_report,
+    get_blacklist_entry_image,
+    list_blacklist_entries,
+    list_blacklist_entry_images,
+    search_blacklist,
+)
 
 
 def create_public_app() -> Flask:
@@ -97,6 +103,11 @@ def create_public_app() -> Flask:
             except ValueError as exc:
                 flash(str(exc), "error")
         return render_template("public/search.html", result=result, searched=searched)
+
+    @app.get("/blacklist")
+    def blacklist_list():
+        entries = list_blacklist_entries()
+        return render_template("public/blacklist.html", entries=entries)
 
     @app.get("/appeal")
     def appeal_form():

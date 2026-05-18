@@ -51,5 +51,11 @@
       <p>这不是情绪宣泄墙，而是用来记录针对福瑞群体的实际恶意行为的公开档案页。我们坚持用事实说话，保护公众安全。</p>
     </article>
   </section>
+    <a class="archive-panel" href="{{ url_for('blacklist_list') }}">
+      <span class="eyebrow">完整档案</span>
+      <h2>查看全部黑名单条目</h2>
+      <p>直接浏览当前所有已通过审核的黑名单记录，按最新更新时间倒序查看在案对象与说明。</p>
+      <span class="text-link">进入总表</span>
+    </a>
 </main>
 {% endblock %}
