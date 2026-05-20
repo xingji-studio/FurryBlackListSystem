@@ -12,15 +12,14 @@ def create_report(
     threat_level: str,
     description: str,
     evidence: str,
-    reporter_contact: str,
     images: list[dict[str, str | bytes]],
 ) -> None:
     connection = get_connection()
     try:
         cursor = connection.execute(
             """
-            INSERT INTO reports (platform, account_id, threat_level, description, evidence, reporter_contact)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO reports (platform, account_id, threat_level, description, evidence)
+            VALUES (?, ?, ?, ?, ?)
             """,
             (
                 platform.strip(),
@@ -28,7 +27,6 @@ def create_report(
                 threat_level.strip(),
                 description.strip(),
                 evidence.strip(),
-                reporter_contact.strip(),
             ),
         )
         report_id = cursor.lastrowid

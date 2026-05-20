@@ -25,7 +25,6 @@ from .db import get_connection
 MAX_ACCOUNT_ID_LENGTH = 64
 MAX_DESCRIPTION_LENGTH = 2000
 MAX_EVIDENCE_LENGTH = 4000
-MAX_CONTACT_LENGTH = 200
 CSRF_SESSION_KEY = "_csrf_token"
 _RATE_LIMIT_BUCKETS: dict[str, deque[float]] = {}
 
@@ -71,13 +70,6 @@ def validate_evidence(evidence: str) -> str:
         raise ValueError("证据不能为空。")
     if len(normalized) > MAX_EVIDENCE_LENGTH:
         raise ValueError(f"证据不能超过 {MAX_EVIDENCE_LENGTH} 个字符。")
-    return normalized
-
-
-def validate_reporter_contact(contact: str) -> str:
-    normalized = contact.strip()
-    if len(normalized) > MAX_CONTACT_LENGTH:
-        raise ValueError(f"举报者联系方式不能超过 {MAX_CONTACT_LENGTH} 个字符。")
     return normalized
 
 
