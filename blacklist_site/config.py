@@ -9,6 +9,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 DATABASE_PATH = DATA_DIR / "blacklist.db"
+SECRET_KEY_PATH = DATA_DIR / "secret_key.txt"
 ENV_FILE = BASE_DIR / ".env"
 SPONSOR_IMAGE_PATH = BASE_DIR / "paymefifty.jpg"
 ALLOWED_PLATFORMS = ("QQ", "微信", "B站", "快手", "抖音", "Discord")
@@ -44,7 +45,28 @@ load_env_file()
 
 
 def get_secret_key() -> str:
-    return os.environ.get("SECRET_KEY", f"dev-{secrets.token_hex(32)}")
+    configured = os.environ.get("SECRET_KEY", "").strip()
+    if configured:
+        return configured
+
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    if SECRET_KEY_PATH.exists():
+        stored = SECRET_KEY_PATH.read_text(encoding="utf-8").strip()
+        if stored:
+            return stored
+
+    generated = f"dev-{secrets.token_hex(32)}"
+    try:
+        fd = os.open(SECRET_KEY_PATH, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    except FileExistsError:
+        stored = SECRET_KEY_PATH.read_text(encoding="utf-8").strip()
+        return stored or generated
+    except OSError:
+        return generated
+
+    with os.fdopen(fd, "w", encoding="utf-8") as file:
+        file.write(generated)
+    return generated
 
 
 def get_admin_username() -> str:

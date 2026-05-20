@@ -166,6 +166,8 @@ gunicorn -c gunicorn.conf.py wsgi:admin_app
 
 `ADMIN_PASSWORD_HASH` 优先级高于 `ADMIN_PASSWORD`，值为 SHA-256 十六进制字符串。
 
+如果未显式设置 `SECRET_KEY`，程序会在首次启动时自动生成并持久化到 `data/secret_key.txt`，避免多 worker 场景下会话和 CSRF 因密钥不一致而随机失效。
+
 新增参数说明：
 
 - `TRUSTED_PROXY_COUNT`：前置反向代理层数，默认 `0`
