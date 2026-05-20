@@ -12,16 +12,24 @@ def create_report(
     threat_level: str,
     description: str,
     evidence: str,
+    reporter_contact: str,
     images: list[dict[str, str | bytes]],
 ) -> None:
     connection = get_connection()
     try:
         cursor = connection.execute(
             """
-            INSERT INTO reports (platform, account_id, threat_level, description, evidence)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO reports (platform, account_id, threat_level, description, evidence, reporter_contact)
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
-            (platform.strip(), account_id.strip(), threat_level.strip(), description.strip(), evidence.strip()),
+            (
+                platform.strip(),
+                account_id.strip(),
+                threat_level.strip(),
+                description.strip(),
+                evidence.strip(),
+                reporter_contact.strip(),
+            ),
         )
         report_id = cursor.lastrowid
         for image in images:
@@ -135,7 +143,7 @@ def list_blacklist_entries() -> list[dict[str, Any]]:
         connection.close()
 
 
-def approve_report(report_id: int, admin_note: str = "") -> bool:
+def approve_report(report_id: int, admin_note: str = "", threat_level: str | None = None) -> bool:
     connection = get_connection()
     try:
         report = connection.execute(
@@ -144,6 +152,8 @@ def approve_report(report_id: int, admin_note: str = "") -> bool:
         ).fetchone()
         if not report:
             return False
+
+        final_threat_level = (threat_level or report["threat_level"]).strip()
 
         report_images = connection.execute(
             """
@@ -169,7 +179,7 @@ def approve_report(report_id: int, admin_note: str = "") -> bool:
             (
                 report["platform"],
                 report["account_id"],
-                report["threat_level"],
+                final_threat_level,
                 report["description"],
                 report["id"],
             ),

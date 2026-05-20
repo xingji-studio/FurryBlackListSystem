@@ -47,6 +47,7 @@ def init_db() -> None:
                 threat_level TEXT NOT NULL,
                 description TEXT NOT NULL,
                 evidence TEXT NOT NULL,
+                reporter_contact TEXT NOT NULL DEFAULT '',
                 status TEXT NOT NULL DEFAULT 'pending',
                 admin_note TEXT NOT NULL DEFAULT '',
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -118,5 +119,23 @@ def init_db() -> None:
             ON rate_limit_events(request_key);
             """
         )
+        _ensure_column(
+            connection,
+            table_name="reports",
+            column_name="reporter_contact",
+            definition="TEXT NOT NULL DEFAULT ''",
+        )
     finally:
         connection.close()
+
+
+def _ensure_column(
+    connection: sqlite3.Connection,
+    table_name: str,
+    column_name: str,
+    definition: str,
+) -> None:
+    columns = connection.execute(f"PRAGMA table_info({table_name})").fetchall()
+    if any(column["name"] == column_name for column in columns):
+        return
+    connection.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {definition}")

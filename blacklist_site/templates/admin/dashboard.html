@@ -31,6 +31,7 @@
             <p><strong>威胁程度：</strong>{{ report.threat_level }}</p>
             <p><strong>描述：</strong>{{ report.description }}</p>
             <p><strong>证据：</strong>{{ report.evidence }}</p>
+            <p><strong>举报者联系方式：</strong>{{ report.reporter_contact or '未填写' }}</p>
             {% if report.images %}
               <div class="evidence-gallery">
                 {% for image in report.images %}
@@ -44,6 +45,13 @@
             <div class="action-row">
               <form method="post" action="{{ url_for('handle_approve_report', report_id=report.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label>最终威胁程度
+                  <select name="threat_level" required>
+                    {% for level in ('低', '中', '高', '严重') %}
+                      <option value="{{ level }}" {% if level == report.threat_level %}selected{% endif %}>{{ level }}</option>
+                    {% endfor %}
+                  </select>
+                </label>
                 <textarea name="admin_note" rows="2" placeholder="审核备注（可选）"></textarea>
                 <button class="primary-button" type="submit">通过并加入黑名单</button>
               </form>

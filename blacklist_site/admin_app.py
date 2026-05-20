@@ -21,6 +21,7 @@ from .security import (
     apply_security_headers,
     check_rate_limit,
     generate_csrf_token,
+    validate_threat_level,
     verify_csrf_token,
 )
 from .services import (
@@ -111,7 +112,12 @@ def create_admin_app() -> Flask:
     def handle_approve_report(report_id: int):
         verify_csrf_token()
         admin_note = request.form.get("admin_note", "")
-        if approve_report(report_id, admin_note):
+        try:
+            threat_level = validate_threat_level(request.form.get("threat_level", ""))
+        except ValueError as exc:
+            flash(str(exc), "error")
+            return redirect(url_for("dashboard"))
+        if approve_report(report_id, admin_note, threat_level):
             flash(f"举报 #{report_id} 已通过并写入黑名单。", "success")
         else:
             flash(f"举报 #{report_id} 不存在或已处理。", "error")

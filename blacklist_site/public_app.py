@@ -23,6 +23,7 @@ from .security import (
     validate_description,
     validate_evidence,
     validate_platform,
+    validate_reporter_contact,
     validate_report_images,
     validate_threat_level,
     verify_csrf_token,
@@ -136,12 +137,13 @@ def create_public_app() -> Flask:
             threat_level = validate_threat_level(request.form.get("threat_level", ""))
             description = validate_description(request.form.get("description", ""))
             evidence = validate_evidence(request.form.get("evidence", ""))
+            reporter_contact = validate_reporter_contact(request.form.get("reporter_contact", ""))
             images = validate_report_images(request.files.getlist("images"))
         except ValueError as exc:
             flash(str(exc), "error")
             return redirect(url_for("report_form"))
 
-        create_report(platform, account_id, threat_level, description, evidence, images)
+        create_report(platform, account_id, threat_level, description, evidence, reporter_contact, images)
         flash("举报已提交，等待管理员审核。", "success")
         return redirect(url_for("report_form"))
 
