@@ -23,9 +23,9 @@ def init_db() -> None:
     connection = get_connection()
     try:
         connection.execute("PRAGMA journal_mode = WAL")
-        connection.execute("PRAGMA synchronous = NORMAL")
-        connection.execute("PRAGMA temp_store = MEMORY")
-        connection.execute("PRAGMA mmap_size = 134217728")
+        connection.execute("PRAGMA synchronous = FULL")
+        connection.execute("PRAGMA temp_store = DEFAULT")
+        connection.execute("PRAGMA mmap_size = 0")
         connection.executescript(
             """
             CREATE TABLE IF NOT EXISTS blacklist_entries (

@@ -162,16 +162,20 @@ gunicorn -c gunicorn.conf.py wsgi:admin_app
 - `TRUSTED_PROXY_COUNT`
 - `MAX_CONTENT_LENGTH`
 - `RATE_LIMIT_MAX_ENTRIES`
+- `RATE_LIMIT_BACKEND`
 
 `ADMIN_PASSWORD_HASH` 优先级高于 `ADMIN_PASSWORD`，值为 SHA-256 十六进制字符串。
 
 新增参数说明：
 
-- `TRUSTED_PROXY_COUNT`：前置反向代理层数，默认 `1`
+- `TRUSTED_PROXY_COUNT`：前置反向代理层数，默认 `0`
 - `MAX_CONTENT_LENGTH`：请求体上限，默认 `6291456` 字节
 - `RATE_LIMIT_MAX_ENTRIES`：限流表保留上限，默认 `20000`
+- `RATE_LIMIT_BACKEND`：限流存储后端，默认 `memory`，可选 `sqlite`
 - `WEB_CONCURRENCY`：Gunicorn worker 数，默认约为 `CPU * 2`
 - `GUNICORN_THREADS`：每个 worker 的线程数，默认 `8`
+
+当前 SQLite 默认使用 `WAL + synchronous=FULL`，更适合电源和主机不稳定的环境，但写入性能会比 `NORMAL` 略低。
 
 生成哈希示例：
 

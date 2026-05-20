@@ -5,6 +5,7 @@ import hashlib
 import secrets
 import sqlite3
 import time
+from collections import deque
 from typing import Any
 
 from flask import abort, request, session
@@ -15,6 +16,7 @@ from .config import (
     ALLOWED_THREAT_LEVELS,
     MAX_REPORT_IMAGE_COUNT,
     MAX_REPORT_IMAGE_SIZE,
+    get_rate_limit_backend,
     get_rate_limit_max_entries,
 )
 from .db import get_connection
@@ -24,6 +26,7 @@ MAX_ACCOUNT_ID_LENGTH = 64
 MAX_DESCRIPTION_LENGTH = 2000
 MAX_EVIDENCE_LENGTH = 4000
 CSRF_SESSION_KEY = "_csrf_token"
+_RATE_LIMIT_BUCKETS: dict[str, deque[float]] = {}
 
 def normalize_text(value: str) -> str:
     return " ".join(value.strip().split())
@@ -140,12 +143,34 @@ def build_request_fingerprint(scope: str) -> str:
 
 
 def check_rate_limit(scope: str, limit: int, window_seconds: int) -> None:
+    if get_rate_limit_backend() != "sqlite":
+        check_rate_limit_memory(scope, limit, window_seconds)
+        return
+
+    check_rate_limit_sqlite(scope, limit, window_seconds)
+
+
+def check_rate_limit_memory(scope: str, limit: int, window_seconds: int) -> None:
+    client_ip = get_client_ip()
+    bucket_key = f"{scope}:{client_ip}"
+    now = time.time()
+    bucket = _RATE_LIMIT_BUCKETS.setdefault(bucket_key, deque())
+
+    while bucket and now - bucket[0] > window_seconds:
+        bucket.popleft()
+
+    if len(bucket) >= limit:
+        abort(429)
+
+    bucket.append(now)
+
+
+def check_rate_limit_sqlite(scope: str, limit: int, window_seconds: int) -> None:
     now = time.time()
     client_ip = get_client_ip()
     request_key = build_request_fingerprint(scope)
     cutoff = now - window_seconds
     max_entries = get_rate_limit_max_entries()
-
     connection = get_connection()
     try:
         # Keep the write lock window short; SQLite under multi-worker load

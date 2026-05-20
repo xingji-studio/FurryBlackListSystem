@@ -72,7 +72,7 @@ def get_admin_port() -> int:
 
 
 def get_trusted_proxy_count() -> int:
-    return max(0, int(os.environ.get("TRUSTED_PROXY_COUNT", "1")))
+    return max(0, int(os.environ.get("TRUSTED_PROXY_COUNT", "0")))
 
 
 def get_max_content_length() -> int:
@@ -81,3 +81,8 @@ def get_max_content_length() -> int:
 
 def get_rate_limit_max_entries() -> int:
     return max(1000, int(os.environ.get("RATE_LIMIT_MAX_ENTRIES", "20000")))
+
+
+def get_rate_limit_backend() -> str:
+    backend = os.environ.get("RATE_LIMIT_BACKEND", "memory").strip().lower()
+    return backend if backend in {"memory", "sqlite"} else "memory"
