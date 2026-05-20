@@ -4,8 +4,15 @@ import mimetypes
 
 from flask import Flask, Response, abort, flash, jsonify, make_response, redirect, render_template, request, url_for
 from werkzeug.exceptions import HTTPException
+from werkzeug.middleware.proxy_fix import ProxyFix
 
-from .config import ALLOWED_PLATFORMS, SPONSOR_IMAGE_PATH, get_secret_key
+from .config import (
+    ALLOWED_PLATFORMS,
+    SPONSOR_IMAGE_PATH,
+    get_max_content_length,
+    get_secret_key,
+    get_trusted_proxy_count,
+)
 from .db import init_db
 from .security import (
     apply_security_headers,
@@ -24,7 +31,6 @@ from .services import (
     create_appeal,
     create_report,
     get_blacklist_entry_image,
-    list_blacklist_entries,
     list_blacklist_entry_images,
     search_blacklist,
 )
@@ -32,8 +38,12 @@ from .services import (
 
 def create_public_app() -> Flask:
     app = Flask(__name__, template_folder="templates", static_folder="static")
+    trusted_proxy_count = get_trusted_proxy_count()
+    if trusted_proxy_count:
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=trusted_proxy_count, x_proto=trusted_proxy_count, x_host=trusted_proxy_count)
     app.secret_key = get_secret_key()
     app.config.update(
+        MAX_CONTENT_LENGTH=get_max_content_length(),
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
     )
@@ -44,12 +54,17 @@ def create_public_app() -> Flask:
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
         response.headers["Access-Control-Allow-Headers"] = "Content-Type"
         response.headers["Access-Control-Max-Age"] = "600"
-        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    def add_public_cache_headers(response: Response, max_age: int) -> Response:
+        response.headers["Cache-Control"] = f"public, max-age={max_age}, s-maxage={max_age}"
+        response.headers["X-Accel-Expires"] = str(max_age)
         return response
 
     def json_error(message: str, status_code: int) -> Response:
         response = jsonify({"success": False, "error": message})
         response.status_code = status_code
+        response.headers["Cache-Control"] = "no-store"
         return add_api_headers(response)
 
     def get_api_search_params() -> tuple[str, str]:
@@ -182,12 +197,8 @@ def create_public_app() -> Flask:
                 "entry": build_api_entry_payload(result) if result else None,
             }
         )
+        response.headers["Cache-Control"] = "public, max-age=60, s-maxage=120" if request.method == "GET" else "no-store"
         return add_api_headers(response)
-
-    @app.get("/blacklist")
-    def blacklist_list():
-        entries = list_blacklist_entries()
-        return render_template("public/blacklist.html", entries=entries)
 
     @app.get("/appeal")
     def appeal_form():
@@ -213,16 +224,19 @@ def create_public_app() -> Flask:
 
     @app.get("/blacklist-images/<int:image_id>")
     def blacklist_image(image_id: int):
+        check_rate_limit("blacklist_image", limit=180, window_seconds=300)
         image = get_blacklist_entry_image(image_id)
         if not image:
             abort(404)
-        return Response(image["image_data"], mimetype=image["mime_type"])
+        response = Response(image["image_data"], mimetype=image["mime_type"])
+        return add_public_cache_headers(response, max_age=300)
 
     @app.get("/sponsor-image")
     def sponsor_image():
         if not SPONSOR_IMAGE_PATH.exists():
             abort(404)
         mimetype, _ = mimetypes.guess_type(SPONSOR_IMAGE_PATH.name)
-        return Response(SPONSOR_IMAGE_PATH.read_bytes(), mimetype=mimetype or "image/jpeg")
+        response = Response(SPONSOR_IMAGE_PATH.read_bytes(), mimetype=mimetype or "image/jpeg")
+        return add_public_cache_headers(response, max_age=3600)
 
     return app

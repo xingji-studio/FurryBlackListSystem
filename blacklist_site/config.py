@@ -21,6 +21,7 @@ ALLOWED_IMAGE_MIME_TYPES = {
 }
 MAX_REPORT_IMAGE_COUNT = 4
 MAX_REPORT_IMAGE_SIZE = 5 * 1024 * 1024
+DEFAULT_MAX_CONTENT_LENGTH = 6 * 1024 * 1024
 
 
 def load_env_file() -> None:
@@ -68,3 +69,15 @@ def get_public_port() -> int:
 
 def get_admin_port() -> int:
     return int(os.environ.get("ADMIN_PORT", "8081"))
+
+
+def get_trusted_proxy_count() -> int:
+    return max(0, int(os.environ.get("TRUSTED_PROXY_COUNT", "1")))
+
+
+def get_max_content_length() -> int:
+    return max(1024, int(os.environ.get("MAX_CONTENT_LENGTH", str(DEFAULT_MAX_CONTENT_LENGTH))))
+
+
+def get_rate_limit_max_entries() -> int:
+    return max(1000, int(os.environ.get("RATE_LIMIT_MAX_ENTRIES", "20000")))

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import secrets
 import time
-from collections import deque
 from typing import Any
 
 from flask import abort, request, session
@@ -14,16 +14,15 @@ from .config import (
     ALLOWED_THREAT_LEVELS,
     MAX_REPORT_IMAGE_COUNT,
     MAX_REPORT_IMAGE_SIZE,
+    get_rate_limit_max_entries,
 )
+from .db import get_connection
 
 
 MAX_ACCOUNT_ID_LENGTH = 64
 MAX_DESCRIPTION_LENGTH = 2000
 MAX_EVIDENCE_LENGTH = 4000
 CSRF_SESSION_KEY = "_csrf_token"
-
-_RATE_LIMIT_BUCKETS: dict[str, deque[float]] = {}
-
 
 def normalize_text(value: str) -> str:
     return " ".join(value.strip().split())
@@ -119,30 +118,95 @@ def verify_csrf_token() -> None:
         abort(400)
 
 
+def get_client_ip() -> str:
+    remote_addr = (request.remote_addr or "").strip()
+    if remote_addr:
+        return remote_addr
+
+    forwarded_for = request.headers.get("X-Forwarded-For", "")
+    first_hop = forwarded_for.split(",")[0].strip()
+    return first_hop or "unknown"
+
+
+def build_request_fingerprint(scope: str) -> str:
+    forwarded_proto = request.headers.get("X-Forwarded-Proto", "")
+    user_agent = request.headers.get("User-Agent", "")
+    accept = request.headers.get("Accept", "")
+    path = request.path
+    method = request.method
+    raw_key = "|".join((scope, path, method, user_agent[:120], accept[:120], forwarded_proto[:20]))
+    return hashlib.sha256(raw_key.encode("utf-8")).hexdigest()
+
+
 def check_rate_limit(scope: str, limit: int, window_seconds: int) -> None:
-    forwarded_for = request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
-    client_ip = forwarded_for or request.remote_addr or "unknown"
-    bucket_key = f"{scope}:{client_ip}"
     now = time.time()
-    bucket = _RATE_LIMIT_BUCKETS.setdefault(bucket_key, deque())
+    client_ip = get_client_ip()
+    request_key = build_request_fingerprint(scope)
+    cutoff = now - window_seconds
+    max_entries = get_rate_limit_max_entries()
 
-    while bucket and now - bucket[0] > window_seconds:
-        bucket.popleft()
+    connection = get_connection()
+    try:
+        connection.execute("BEGIN IMMEDIATE")
+        connection.execute(
+            "DELETE FROM rate_limit_events WHERE created_at < ?",
+            (cutoff,),
+        )
+        current_count = connection.execute(
+            """
+            SELECT COUNT(*) AS total
+            FROM rate_limit_events
+            WHERE scope = ? AND client_ip = ? AND created_at >= ?
+            """,
+            (scope, client_ip, cutoff),
+        ).fetchone()
+        if current_count and current_count["total"] >= limit:
+            connection.execute("ROLLBACK")
+            abort(429)
 
-    if len(bucket) >= limit:
-        abort(429)
+        connection.execute(
+            """
+            INSERT INTO rate_limit_events (scope, client_ip, request_key, created_at)
+            VALUES (?, ?, ?, ?)
+            """,
+            (scope, client_ip, request_key, now),
+        )
 
-    bucket.append(now)
+        total_rows = connection.execute(
+            "SELECT COUNT(*) AS total FROM rate_limit_events"
+        ).fetchone()
+        if total_rows and total_rows["total"] > max_entries:
+            overflow = total_rows["total"] - max_entries
+            connection.execute(
+                """
+                DELETE FROM rate_limit_events
+                WHERE id IN (
+                    SELECT id
+                    FROM rate_limit_events
+                    ORDER BY created_at ASC
+                    LIMIT ?
+                )
+                """,
+                (overflow,),
+            )
+        connection.commit()
+    finally:
+        connection.close()
 
 
 def apply_security_headers(response: Any) -> Any:
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
         "style-src 'self' 'unsafe-inline'; "
         "img-src 'self' data:; "
+        "script-src 'self'; "
+        "connect-src 'self'; "
         "form-action 'self'; "
         "base-uri 'self'; "
         "frame-ancestors 'none'"

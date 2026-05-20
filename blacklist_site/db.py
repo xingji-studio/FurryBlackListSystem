@@ -12,9 +12,14 @@ def dict_factory(cursor: sqlite3.Cursor, row: tuple) -> dict:
 
 def get_connection() -> sqlite3.Connection:
     DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(DATABASE_PATH)
+    connection = sqlite3.connect(DATABASE_PATH, timeout=10)
     connection.row_factory = dict_factory
     connection.execute("PRAGMA foreign_keys = ON")
+    connection.execute("PRAGMA journal_mode = WAL")
+    connection.execute("PRAGMA synchronous = NORMAL")
+    connection.execute("PRAGMA busy_timeout = 10000")
+    connection.execute("PRAGMA temp_store = MEMORY")
+    connection.execute("PRAGMA mmap_size = 134217728")
     return connection
 
 
@@ -79,8 +84,39 @@ def init_db() -> None:
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
+
+            CREATE TABLE IF NOT EXISTS rate_limit_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                scope TEXT NOT NULL,
+                client_ip TEXT NOT NULL,
+                request_key TEXT NOT NULL,
+                created_at REAL NOT NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_blacklist_entries_lookup
+            ON blacklist_entries(platform, account_id);
+
+            CREATE INDEX IF NOT EXISTS idx_blacklist_entries_updated
+            ON blacklist_entries(updated_at DESC, id DESC);
+
+            CREATE INDEX IF NOT EXISTS idx_reports_status_created
+            ON reports(status, created_at, id);
+
+            CREATE INDEX IF NOT EXISTS idx_appeals_status_created
+            ON appeals(status, created_at, id);
+
+            CREATE INDEX IF NOT EXISTS idx_report_images_report_id
+            ON report_images(report_id, id);
+
+            CREATE INDEX IF NOT EXISTS idx_blacklist_entry_images_entry_id
+            ON blacklist_entry_images(blacklist_entry_id, id);
+
+            CREATE INDEX IF NOT EXISTS idx_rate_limit_scope_ip_time
+            ON rate_limit_events(scope, client_ip, created_at);
+
+            CREATE INDEX IF NOT EXISTS idx_rate_limit_request_key
+            ON rate_limit_events(request_key);
             """
         )
-        connection.commit()
     finally:
         connection.close()

@@ -4,13 +4,16 @@ from datetime import timedelta
 from functools import wraps
 
 from flask import Flask, Response, abort, flash, redirect, render_template, request, session, url_for
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .config import (
     ALLOWED_PLATFORMS,
     get_admin_password,
     get_admin_password_hash,
     get_admin_username,
+    get_max_content_length,
     get_secret_key,
+    get_trusted_proxy_count,
     hash_password,
 )
 from .db import init_db
@@ -35,8 +38,12 @@ from .services import (
 
 def create_admin_app() -> Flask:
     app = Flask(__name__, template_folder="templates", static_folder="static")
+    trusted_proxy_count = get_trusted_proxy_count()
+    if trusted_proxy_count:
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=trusted_proxy_count, x_proto=trusted_proxy_count, x_host=trusted_proxy_count)
     app.secret_key = get_secret_key()
     app.config.update(
+        MAX_CONTENT_LENGTH=get_max_content_length(),
         PERMANENT_SESSION_LIFETIME=timedelta(minutes=10),
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Strict",
