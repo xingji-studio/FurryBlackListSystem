@@ -12,20 +12,20 @@ def dict_factory(cursor: sqlite3.Cursor, row: tuple) -> dict:
 
 def get_connection() -> sqlite3.Connection:
     DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(DATABASE_PATH, timeout=10)
+    connection = sqlite3.connect(DATABASE_PATH, timeout=30)
     connection.row_factory = dict_factory
     connection.execute("PRAGMA foreign_keys = ON")
-    connection.execute("PRAGMA journal_mode = WAL")
-    connection.execute("PRAGMA synchronous = NORMAL")
     connection.execute("PRAGMA busy_timeout = 10000")
-    connection.execute("PRAGMA temp_store = MEMORY")
-    connection.execute("PRAGMA mmap_size = 134217728")
     return connection
 
 
 def init_db() -> None:
     connection = get_connection()
     try:
+        connection.execute("PRAGMA journal_mode = WAL")
+        connection.execute("PRAGMA synchronous = NORMAL")
+        connection.execute("PRAGMA temp_store = MEMORY")
+        connection.execute("PRAGMA mmap_size = 134217728")
         connection.executescript(
             """
             CREATE TABLE IF NOT EXISTS blacklist_entries (

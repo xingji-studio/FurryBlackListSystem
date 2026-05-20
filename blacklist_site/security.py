@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import secrets
+import sqlite3
 import time
 from typing import Any
 
@@ -147,11 +148,8 @@ def check_rate_limit(scope: str, limit: int, window_seconds: int) -> None:
 
     connection = get_connection()
     try:
-        connection.execute("BEGIN IMMEDIATE")
-        connection.execute(
-            "DELETE FROM rate_limit_events WHERE created_at < ?",
-            (cutoff,),
-        )
+        # Keep the write lock window short; SQLite under multi-worker load
+        # should not do full-table cleanup on every request.
         current_count = connection.execute(
             """
             SELECT COUNT(*) AS total
@@ -172,24 +170,33 @@ def check_rate_limit(scope: str, limit: int, window_seconds: int) -> None:
             (scope, client_ip, request_key, now),
         )
 
-        total_rows = connection.execute(
-            "SELECT COUNT(*) AS total FROM rate_limit_events"
-        ).fetchone()
-        if total_rows and total_rows["total"] > max_entries:
-            overflow = total_rows["total"] - max_entries
+        if int(now) % 30 == 0:
             connection.execute(
-                """
-                DELETE FROM rate_limit_events
-                WHERE id IN (
-                    SELECT id
-                    FROM rate_limit_events
-                    ORDER BY created_at ASC
-                    LIMIT ?
-                )
-                """,
-                (overflow,),
+                "DELETE FROM rate_limit_events WHERE created_at < ?",
+                (cutoff,),
             )
+            total_rows = connection.execute(
+                "SELECT COUNT(*) AS total FROM rate_limit_events"
+            ).fetchone()
+            if total_rows and total_rows["total"] > max_entries:
+                overflow = total_rows["total"] - max_entries
+                connection.execute(
+                    """
+                    DELETE FROM rate_limit_events
+                    WHERE id IN (
+                        SELECT id
+                        FROM rate_limit_events
+                        ORDER BY created_at ASC
+                        LIMIT ?
+                    )
+                    """,
+                    (overflow,),
+                )
         connection.commit()
+    except sqlite3.OperationalError as exc:
+        if "locked" in str(exc).lower():
+            abort(429)
+        raise
     finally:
         connection.close()
 
