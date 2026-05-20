@@ -575,6 +575,18 @@ button:hover {
   border-left: 6px solid var(--safe);
 }
 
+.api-panel code {
+  display: inline-block;
+  margin: 4px 0;
+  padding: 6px 10px;
+  background: rgba(28, 26, 24, 0.06);
+  word-break: break-all;
+}
+
+.api-result-panel[hidden] {
+  display: none;
+}
+
 .login-layout {
   place-items: center;
   min-height: calc(100vh - 90px);

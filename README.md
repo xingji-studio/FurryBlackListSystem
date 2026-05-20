@@ -10,6 +10,7 @@
 - 举报：提交平台、账号 ID、威胁程度、描述、证据
 - 查询：按平台和账号名检索黑名单
 - 申诉：提交平台、账号 ID、描述、证据
+- API 查询：外部程序可直接调用公开接口查询黑名单
 
 后台页需要账号密码登录，可以：
 
@@ -95,3 +96,102 @@ start.bat
 - `data/`：运行时自动生成的 SQLite 数据库
 - `start.sh` / `start.bat`：一键部署脚本
 - `start_servers.py`：同时拉起两个服务
+
+## 黑名单查询 API
+
+公开页提供只读查询接口，默认地址：
+
+```text
+GET http://127.0.0.1:8080/api/blacklist/search
+```
+
+支持跨域调用，适合网页前端、机器人或其他后端服务直接接入。
+
+### 请求参数
+
+- `platform`：平台名称，必须是站点允许的平台之一，例如 `QQ`
+- `account_id`：要查询的账号 ID 或账号名
+
+### GET 调用示例
+
+```bash
+curl "http://127.0.0.1:8080/api/blacklist/search?platform=QQ&account_id=user_12345"
+```
+
+### POST JSON 调用示例
+
+```bash
+curl -X POST "http://127.0.0.1:8080/api/blacklist/search" \
+  -H "Content-Type: application/json" \
+  -d '{"platform":"QQ","account_id":"user_12345"}'
+```
+
+### JavaScript 调用示例
+
+```js
+const response = await fetch("http://127.0.0.1:8080/api/blacklist/search?platform=QQ&account_id=user_12345");
+const data = await response.json();
+
+if (data.success && data.found) {
+  console.log("命中黑名单", data.entry);
+} else if (data.success) {
+  console.log("未命中", data.query);
+} else {
+  console.error("查询失败", data.error);
+}
+```
+
+### 返回示例
+
+命中时：
+
+```json
+{
+  "success": true,
+  "found": true,
+  "query": {
+    "platform": "QQ",
+    "account_id": "user_12345"
+  },
+  "entry": {
+    "id": 1,
+    "platform": "QQ",
+    "account_id": "user_12345",
+    "threat_level": "高",
+    "description": "长期骚扰、发布仇恨言论。",
+    "created_at": "2026-05-20 08:00:00",
+    "updated_at": "2026-05-20 08:00:00",
+    "images": [
+      {
+        "id": 2,
+        "filename": "evidence-1.png",
+        "mime_type": "image/png",
+        "url": "http://127.0.0.1:8080/blacklist-images/2"
+      }
+    ]
+  }
+}
+```
+
+未命中时：
+
+```json
+{
+  "success": true,
+  "found": false,
+  "query": {
+    "platform": "QQ",
+    "account_id": "user_12345"
+  },
+  "entry": null
+}
+```
+
+参数错误或请求过快时：
+
+```json
+{
+  "success": false,
+  "error": "平台选项无效。"
+}
+```

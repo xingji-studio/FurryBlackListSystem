@@ -6,10 +6,10 @@
     <a class="text-link" href="{{ url_for('index') }}">返回首页</a>
     <span class="eyebrow">Archive Lookup</span>
     <h1>黑名单查询</h1>
-    <p>输入平台和账号名，系统会检索已通过审核的记录，用于快速核验风险对象是否已在案。</p>
+    <p>输入平台和账号名，页面会调用公开 API 检索已通过审核的记录。你也可以在外部程序中直接请求同一个接口。</p>
   </div>
-  <form class="form-panel compact" method="post">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <form class="form-panel compact" id="search-form" data-api-endpoint="{{ url_for('api_search') }}" novalidate>
     <label>平台
       <select name="platform" required>
         <option value="">请选择平台</option>
@@ -24,34 +24,7 @@
     <button class="primary-button" type="submit">开始查询</button>
   </form>
 
-  {% if searched %}
-    {% if result %}
-      <section class="result-panel danger">
-        <h2>查询结果：命中黑名单</h2>
-        <dl>
-          <div><dt>平台</dt><dd>{{ result.platform }}</dd></div>
-          <div><dt>账号 ID</dt><dd>{{ result.account_id }}</dd></div>
-          <div><dt>威胁程度</dt><dd>{{ result.threat_level }}</dd></div>
-          <div><dt>描述</dt><dd>{{ result.description }}</dd></div>
-          <div><dt>录入时间</dt><dd>{{ result.created_at }}</dd></div>
-        </dl>
-        {% if result.image_cards %}
-          <div class="evidence-gallery">
-            {% for image in result.image_cards %}
-              <a class="evidence-thumb" href="{{ url_for('blacklist_image', image_id=image.id) }}" target="_blank" rel="noopener noreferrer">
-                <img src="{{ image.preview_url }}" alt="{{ image.filename }}">
-                <span>{{ image.filename }}</span>
-              </a>
-            {% endfor %}
-          </div>
-        {% endif %}
-      </section>
-    {% else %}
-      <section class="result-panel safe">
-        <h2>查询结果：未命中</h2>
-        <p>当前黑名单中没有找到对应平台与账号名的审核通过记录。</p>
-      </section>
-    {% endif %}
-  {% endif %}
+  <section class="result-panel api-result-panel" id="search-feedback" hidden></section>
 </main>
+<script src="{{ url_for('static', filename='search-api.js') }}"></script>
 {% endblock %}

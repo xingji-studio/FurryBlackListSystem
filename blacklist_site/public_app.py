@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import mimetypes
 
-from flask import Flask, Response, abort, flash, redirect, render_template, request, url_for
+from flask import Flask, Response, abort, flash, jsonify, make_response, redirect, render_template, request, url_for
+from werkzeug.exceptions import HTTPException
 
 from .config import ALLOWED_PLATFORMS, SPONSOR_IMAGE_PATH, get_secret_key
 from .db import init_db
@@ -37,6 +38,57 @@ def create_public_app() -> Flask:
         SESSION_COOKIE_SAMESITE="Lax",
     )
     init_db()
+
+    def add_api_headers(response: Response) -> Response:
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        response.headers["Access-Control-Max-Age"] = "600"
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    def json_error(message: str, status_code: int) -> Response:
+        response = jsonify({"success": False, "error": message})
+        response.status_code = status_code
+        return add_api_headers(response)
+
+    def get_api_search_params() -> tuple[str, str]:
+        if request.method == "POST":
+            payload = request.get_json(silent=True)
+            if isinstance(payload, dict):
+                raw_platform = payload.get("platform", "")
+                raw_account_id = payload.get("account_id", "")
+            else:
+                raw_platform = request.form.get("platform", "")
+                raw_account_id = request.form.get("account_id", "")
+        else:
+            raw_platform = request.args.get("platform", "")
+            raw_account_id = request.args.get("account_id", "")
+
+        platform = validate_platform(str(raw_platform))
+        account_id = validate_account_id(str(raw_account_id))
+        return platform, account_id
+
+    def build_api_entry_payload(entry: dict) -> dict:
+        images = list_blacklist_entry_images(entry["id"])
+        return {
+            "id": entry["id"],
+            "platform": entry["platform"],
+            "account_id": entry["account_id"],
+            "threat_level": entry["threat_level"],
+            "description": entry["description"],
+            "created_at": entry["created_at"],
+            "updated_at": entry["updated_at"],
+            "images": [
+                {
+                    "id": image["id"],
+                    "filename": image["filename"],
+                    "mime_type": image["mime_type"],
+                    "url": url_for("blacklist_image", image_id=image["id"], _external=True),
+                }
+                for image in images
+            ],
+        }
 
     @app.context_processor
     def inject_globals():
@@ -103,6 +155,34 @@ def create_public_app() -> Flask:
             except ValueError as exc:
                 flash(str(exc), "error")
         return render_template("public/search.html", result=result, searched=searched)
+
+    @app.route("/api/blacklist/search", methods=["GET", "POST", "OPTIONS"])
+    def api_search():
+        if request.method == "OPTIONS":
+            return add_api_headers(make_response("", 204))
+
+        try:
+            check_rate_limit("api_search", limit=60, window_seconds=300)
+            platform, account_id = get_api_search_params()
+            result = search_blacklist(platform, account_id)
+        except ValueError as exc:
+            return json_error(str(exc), 400)
+        except HTTPException as exc:
+            message = "请求过于频繁，请稍后再试。" if exc.code == 429 else str(exc.description or "请求失败。")
+            return json_error(message, exc.code or 500)
+
+        response = jsonify(
+            {
+                "success": True,
+                "found": result is not None,
+                "query": {
+                    "platform": platform,
+                    "account_id": account_id,
+                },
+                "entry": build_api_entry_payload(result) if result else None,
+            }
+        )
+        return add_api_headers(response)
 
     @app.get("/blacklist")
     def blacklist_list():
