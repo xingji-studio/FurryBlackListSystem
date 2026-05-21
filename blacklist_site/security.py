@@ -50,6 +50,8 @@ def validate_account_id(account_id: str) -> str:
     normalized = normalize_text(account_id)
     if not normalized:
         raise ValueError("账号 ID 不能为空。")
+    if not normalized.isascii():
+        raise ValueError("账号 ID 只能包含 ASCII 字符。")
     if len(normalized) > MAX_ACCOUNT_ID_LENGTH:
         raise ValueError(f"账号 ID 不能超过 {MAX_ACCOUNT_ID_LENGTH} 个字符。")
     return normalized

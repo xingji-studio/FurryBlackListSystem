@@ -214,11 +214,11 @@ def create_public_app() -> Flask:
             account_id = validate_account_id(request.form.get("account_id", ""))
             description = validate_description(request.form.get("description", ""))
             evidence = validate_evidence(request.form.get("evidence", ""))
+            create_appeal(platform, account_id, description, evidence)
         except ValueError as exc:
             flash(str(exc), "error")
             return redirect(url_for("appeal_form"))
 
-        create_appeal(platform, account_id, description, evidence)
         flash("申诉已提交，等待管理员审核。", "success")
         return redirect(url_for("appeal_form"))
 

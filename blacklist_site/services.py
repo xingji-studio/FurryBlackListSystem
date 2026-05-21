@@ -46,6 +46,9 @@ def create_report(
 def create_appeal(platform: str, account_id: str, description: str, evidence: str) -> None:
     connection = get_connection()
     try:
+        if not _blacklist_entry_exists(connection, platform, account_id):
+            raise ValueError("该平台下的账号 ID 不在黑名单中，不能提交申诉。")
+
         connection.execute(
             """
             INSERT INTO appeals (platform, account_id, description, evidence)
@@ -344,6 +347,19 @@ def _update_request_status(table_name: str, row_id: int, status: str, admin_note
         return cursor.rowcount > 0
     finally:
         connection.close()
+
+
+def _blacklist_entry_exists(connection: sqlite3.Connection, platform: str, account_id: str) -> bool:
+    entry = connection.execute(
+        """
+        SELECT 1
+        FROM blacklist_entries
+        WHERE lower(platform) = lower(?) AND lower(account_id) = lower(?)
+        LIMIT 1
+        """,
+        (platform.strip(), account_id.strip()),
+    ).fetchone()
+    return entry is not None
 
 
 def _get_image(query: str, image_id: int) -> dict[str, Any] | None:

@@ -6,7 +6,7 @@
     <a class="text-link" href="{{ url_for('index') }}">返回首页</a>
     <span class="eyebrow">Appeal Review</span>
     <h1>申诉提交</h1>
-    <p>若收录存在误判，可提交申诉和补充说明。管理员审核通过后，会自动移除对应黑名单记录。</p>
+    <p>仅限已被收录进黑名单的账号提交申诉。管理员审核通过后，会自动移除对应黑名单记录。</p>
   </div>
   <form class="form-panel" method="post">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -20,6 +20,7 @@
     </label>
     <label>账号 ID
       <input name="account_id" type="text" placeholder="例如：user_12345" required>
+      <span class="field-hint">仅允许 ASCII 字符，且必须与黑名单中的平台和账号 ID 完全对应。</span>
     </label>
     <label>描述
       <textarea name="description" rows="5" placeholder="说明为什么是误收录，并补充必要上下文" required></textarea>
