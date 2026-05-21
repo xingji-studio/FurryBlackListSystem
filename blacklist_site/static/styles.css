@@ -481,7 +481,8 @@ label {
 }
 
 .consent-check {
-  grid-template-columns: auto 1fr;
+  display: inline-flex;
+  justify-self: start;
   align-items: start;
   gap: 10px;
   font-weight: 600;
