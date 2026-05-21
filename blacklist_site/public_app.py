@@ -23,6 +23,7 @@ from .security import (
     validate_account_id,
     validate_description,
     validate_evidence,
+    validate_license_agreement,
     validate_platform,
     validate_report_images,
     validate_threat_level,
@@ -138,6 +139,7 @@ def create_public_app() -> Flask:
             threat_level = validate_threat_level(request.form.get("threat_level", ""))
             description = validate_description(request.form.get("description", ""))
             evidence = validate_evidence(request.form.get("evidence", ""))
+            validate_license_agreement(request.form.get("license_agreement", ""))
             images = validate_report_images(request.files.getlist("images"))
         except ValueError as exc:
             flash(str(exc), "error")
@@ -232,6 +234,7 @@ def create_public_app() -> Flask:
             account_id = validate_account_id(request.form.get("account_id", ""))
             description = validate_description(request.form.get("description", ""))
             evidence = validate_evidence(request.form.get("evidence", ""))
+            validate_license_agreement(request.form.get("license_agreement", ""))
             create_appeal(platform, account_id, description, evidence)
         except ValueError as exc:
             flash(str(exc), "error")

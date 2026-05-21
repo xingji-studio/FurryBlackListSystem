@@ -480,6 +480,24 @@ label {
   font-weight: 500;
 }
 
+.consent-check {
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.consent-check input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  padding: 0;
+}
+
+.consent-check span {
+  line-height: 1.6;
+}
+
 input,
 select,
 textarea,

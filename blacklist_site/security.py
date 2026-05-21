@@ -75,6 +75,11 @@ def validate_evidence(evidence: str) -> str:
     return normalized
 
 
+def validate_license_agreement(agreed_value: str) -> None:
+    if agreed_value != "yes":
+        raise ValueError("请先阅读并同意《极端反福瑞行为档案库许可协议》。")
+
+
 def validate_report_images(files: list[Any]) -> list[dict[str, str | bytes]]:
     valid_files = [file for file in files if getattr(file, "filename", "")]
     if len(valid_files) > MAX_REPORT_IMAGE_COUNT:
