@@ -141,6 +141,22 @@ def list_blacklist_entries() -> list[dict[str, Any]]:
         connection.close()
 
 
+def delete_blacklist_entry(entry_id: int) -> bool:
+    connection = get_connection()
+    try:
+        cursor = connection.execute(
+            """
+            DELETE FROM blacklist_entries
+            WHERE id = ?
+            """,
+            (entry_id,),
+        )
+        connection.commit()
+        return cursor.rowcount > 0
+    finally:
+        connection.close()
+
+
 def approve_report(report_id: int, admin_note: str = "", threat_level: str | None = None) -> bool:
     connection = get_connection()
     try:

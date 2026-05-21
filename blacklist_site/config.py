@@ -9,6 +9,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 DATABASE_PATH = DATA_DIR / "blacklist.db"
+LOG_DIR = DATA_DIR / "logs"
 SECRET_KEY_PATH = DATA_DIR / "secret_key.txt"
 ENV_FILE = BASE_DIR / ".env"
 SPONSOR_IMAGE_PATH = BASE_DIR / "paymefifty.jpg"

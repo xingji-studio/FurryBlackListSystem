@@ -8,10 +8,18 @@
       <h1>后台管理页</h1>
       <p class="header-copy">这里处理举报、申诉与黑名单档案。通过审核后，记录会自动增删，不需要手动同步。</p>
     </div>
-    <form method="post" action="{{ url_for('logout') }}">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button class="secondary-button" type="submit">退出登录</button>
-    </form>
+    <div class="admin-controls">
+      <form method="get" action="{{ url_for('export_database') }}">
+        <button class="secondary-button" type="submit">导出数据库</button>
+      </form>
+      <form method="get" action="{{ url_for('export_logs') }}">
+        <button class="secondary-button" type="submit">导出服务器日志</button>
+      </form>
+      <form method="post" action="{{ url_for('logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="secondary-button" type="submit">退出登录</button>
+      </form>
+    </div>
   </header>
 
   <section class="admin-section">
@@ -120,6 +128,7 @@
               <th>威胁程度</th>
               <th>描述</th>
               <th>更新时间</th>
+              <th>操作</th>
             </tr>
           </thead>
           <tbody>
@@ -143,6 +152,12 @@
                   {% endif %}
                 </td>
                 <td>{{ entry.updated_at }}</td>
+                <td>
+                  <form class="table-action-form" method="post" action="{{ url_for('handle_delete_blacklist_entry', entry_id=entry.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="danger-button" type="submit" onclick="return confirm('确认删除这条已过审黑名单记录吗？');">删除</button>
+                  </form>
+                </td>
               </tr>
             {% endfor %}
           </tbody>

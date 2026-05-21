@@ -611,6 +611,18 @@ button:hover {
   padding: 26px 28px;
 }
 
+.admin-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.admin-controls form,
+.table-action-form {
+  margin: 0;
+}
+
 .header-copy {
   max-width: 680px;
   margin-bottom: 0;
@@ -705,6 +717,11 @@ td {
 th {
   font-family: "Noto Serif SC", serif;
   font-size: 0.95rem;
+}
+
+.table-action-form button {
+  width: 100%;
+  min-width: 88px;
 }
 
 tbody tr:hover {

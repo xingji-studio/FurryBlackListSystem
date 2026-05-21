@@ -121,3 +121,18 @@ def init_db() -> None:
     finally:
         connection.close()
 
+
+def create_database_backup(target_path: Path) -> Path:
+    if not DATABASE_PATH.exists():
+        raise FileNotFoundError(DATABASE_PATH)
+
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    source = get_connection()
+    backup = sqlite3.connect(target_path)
+    try:
+        source.backup(backup)
+        backup.commit()
+        return target_path
+    finally:
+        backup.close()
+        source.close()
