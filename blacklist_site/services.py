@@ -13,7 +13,7 @@ def create_report(
     description: str,
     evidence: str,
     images: list[dict[str, str | bytes]],
-) -> None:
+) -> int:
     connection = get_connection()
     try:
         cursor = connection.execute(
@@ -39,6 +39,23 @@ def create_report(
                 (report_id, image["mime_type"], image["filename"], image["image_data"]),
             )
         connection.commit()
+        return int(report_id)
+    finally:
+        connection.close()
+
+
+def delete_report(report_id: int) -> bool:
+    connection = get_connection()
+    try:
+        cursor = connection.execute(
+            """
+            DELETE FROM reports
+            WHERE id = ?
+            """,
+            (report_id,),
+        )
+        connection.commit()
+        return cursor.rowcount > 0
     finally:
         connection.close()
 

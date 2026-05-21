@@ -22,6 +22,7 @@ from .config import (
     hash_password,
 )
 from .db import create_database_backup, init_db
+from .report_trace import list_report_trace_files
 from .security import (
     apply_security_headers,
     check_rate_limit,
@@ -204,6 +205,25 @@ def create_admin_app() -> Flask:
         return _send_temp_file(
             archive_path,
             download_name="server-logs.zip",
+            mimetype="application/zip",
+        )
+
+    @app.get("/exports/report-traces")
+    @login_required
+    def export_report_traces():
+        trace_files = list_report_trace_files()
+        if not trace_files:
+            flash("当前没有可导出的举报溯源文件。", "error")
+            return redirect(url_for("dashboard"))
+
+        archive_path = _build_temp_path("report-traces-export-", ".zip")
+        with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            for trace_file in trace_files:
+                archive.write(trace_file, arcname=trace_file.relative_to(trace_file.parent.parent))
+
+        return _send_temp_file(
+            archive_path,
+            download_name="report-traces.zip",
             mimetype="application/zip",
         )
 

@@ -14,6 +14,7 @@ from .config import (
     get_trusted_proxy_count,
 )
 from .db import init_db
+from .report_trace import build_report_trace_payload, write_report_trace
 from .security import (
     apply_security_headers,
     build_image_data_url,
@@ -30,6 +31,7 @@ from .security import (
 from .services import (
     create_appeal,
     create_report,
+    delete_report,
     get_blacklist_entry_image,
     list_blacklist_entry_images,
     search_blacklist,
@@ -141,7 +143,23 @@ def create_public_app() -> Flask:
             flash(str(exc), "error")
             return redirect(url_for("report_form"))
 
-        create_report(platform, account_id, threat_level, description, evidence, images)
+        report_id = create_report(platform, account_id, threat_level, description, evidence, images)
+        try:
+            trace_payload = build_report_trace_payload(
+                report_id=report_id,
+                platform=platform,
+                account_id=account_id,
+                threat_level=threat_level,
+                description=description,
+                evidence=evidence,
+                images=images,
+                http_request=request,
+            )
+            write_report_trace(trace_payload)
+        except Exception:
+            delete_report(report_id)
+            flash("举报提交失败，溯源文件写入异常，请稍后重试。", "error")
+            return redirect(url_for("report_form"))
         flash("举报已提交，等待管理员审核。", "success")
         return redirect(url_for("report_form"))
 

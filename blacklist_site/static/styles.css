@@ -93,6 +93,24 @@ a {
   border-bottom: 1px solid rgba(61, 49, 31, 0.2);
 }
 
+.compliance-banner {
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  border: 2px solid #7f1010;
+  background: linear-gradient(180deg, rgba(255, 241, 241, 0.98), rgba(255, 222, 222, 0.98));
+  box-shadow: 0 16px 34px rgba(127, 16, 16, 0.16);
+  text-align: center;
+}
+
+.compliance-banner strong {
+  display: block;
+  color: #b10000;
+  font-size: clamp(1.05rem, 2vw, 1.42rem);
+  font-weight: 900;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+}
+
 .site-brand {
   display: inline-flex;
   align-items: center;
@@ -815,5 +833,9 @@ tbody tr:hover {
     min-height: auto;
     padding: 20px;
     transform: none;
+  }
+
+  .compliance-banner {
+    padding: 14px 16px;
   }
 }

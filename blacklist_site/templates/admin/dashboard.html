@@ -12,6 +12,9 @@
       <form method="get" action="{{ url_for('export_database') }}">
         <button class="secondary-button" type="submit">导出数据库</button>
       </form>
+      <form method="get" action="{{ url_for('export_report_traces') }}">
+        <button class="secondary-button" type="submit">导出举报溯源文件</button>
+      </form>
       <form method="get" action="{{ url_for('export_logs') }}">
         <button class="secondary-button" type="submit">导出服务器日志</button>
       </form>
