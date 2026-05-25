@@ -1,5 +1,4 @@
-import { createClient } from '@libsql/client'
-import { drizzle } from 'drizzle-orm/libsql'
+import { drizzle } from 'drizzle-orm/libsql/http'
 import { sql } from 'drizzle-orm'
 import { env } from './env'
 
@@ -8,11 +7,12 @@ let ready: Promise<void> | null = null
 
 export const getDb = async () => {
   if (db) return db
-  const client = createClient({
-    url: env.databaseUrl,
-    authToken: env.databaseAuthToken || undefined
+  db = drizzle({
+    connection: {
+      url: env.databaseUrl,
+      authToken: env.databaseAuthToken || undefined
+    }
   })
-  db = drizzle(client)
   return db
 }
 
