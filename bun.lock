@@ -25,15 +25,18 @@
         "@fbls/shared": "workspace:*",
         "@libsql/client": "^0.17.3",
         "drizzle-orm": "^0.45.2",
-        "hono": "^4.10.4",
+        "hono": "^4.12.23",
         "jose": "^6.1.2",
         "mime-types": "^3.0.1",
       },
       "devDependencies": {
+        "@hono/node-server": "1.19.14",
+        "@hono/vite-build": "^1.11.1",
         "@types/mime-types": "^3.0.1",
         "@types/node": "^25.9.1",
         "drizzle-kit": "^0.31.7",
         "typescript": "^6.0.3",
+        "vite": "^8.0.14",
       },
     },
     "apps/public": {
@@ -126,6 +129,10 @@
     "@fbls/public": ["@fbls/public@workspace:apps/public"],
 
     "@fbls/shared": ["@fbls/shared@workspace:packages/shared"],
+
+    "@hono/node-server": ["@hono/node-server@1.19.14", "https://registry.npmmirror.com/@hono/node-server/-/node-server-1.19.14.tgz", { "peerDependencies": { "hono": "^4" } }, "sha512-GwtvgtXxnWsucXvbQXkRgqksiH2Qed37H9xHZocE5sA3N8O8O8/8FA3uclQXxXVzc9XBZuEOMK7+r02FmSpHtw=="],
+
+    "@hono/vite-build": ["@hono/vite-build@1.11.1", "https://registry.npmmirror.com/@hono/vite-build/-/vite-build-1.11.1.tgz", { "peerDependencies": { "hono": "*" } }, "sha512-EQJmFL7G+71MXZQ/mmywNl4qW6DSyjTdC30cq7mlDS451a1/jE86old0M2DCWzNGCO50sv7CzQDYkz4L5dq5VQ=="],
 
     "@jridgewell/gen-mapping": ["@jridgewell/gen-mapping@0.3.13", "https://registry.npmmirror.com/@jridgewell/gen-mapping/-/gen-mapping-0.3.13.tgz", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.0", "@jridgewell/trace-mapping": "^0.3.24" } }, "sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA=="],
 
@@ -251,7 +258,7 @@
 
     "get-tsconfig": ["get-tsconfig@4.14.0", "https://registry.npmmirror.com/get-tsconfig/-/get-tsconfig-4.14.0.tgz", { "dependencies": { "resolve-pkg-maps": "^1.0.0" } }, "sha512-yTb+8DXzDREzgvYmh6s9vHsSVCHeC0G3PI5bEXNBHtmshPnO+S5O7qgLEOn0I5QvMy6kpZN8K1NKGyilLb93wA=="],
 
-    "hono": ["hono@4.12.22", "https://registry.npmmirror.com/hono/-/hono-4.12.22.tgz", {}, "sha512-7fvVPbB92zNRsQke+uiRGwtTuef0tB2Dg4hWxYfFNvkQhIltWoyi0ONReM5LWA+jJWS3nfT5lTq+qbsIpX0IQw=="],
+    "hono": ["hono@4.12.23", "https://registry.npmmirror.com/hono/-/hono-4.12.23.tgz", {}, "sha512-eIaZ9qDgu7XV0pxOCrg7/WhnQ6Ivm22UcxhXx/A3dcbqbbYgBEkc6e/J/s7j2tS96zoB0S9VBdLwQNCWwUo4LA=="],
 
     "is-reference": ["is-reference@3.0.3", "https://registry.npmmirror.com/is-reference/-/is-reference-3.0.3.tgz", { "dependencies": { "@types/estree": "^1.0.6" } }, "sha512-ixkJoqQvAP88E6wLydLGGqCJsrFUnqoH6HnaczB8XmDH1oaWU+xxdptvikTgaEhtZ53Ky6YXiBuUI2WXLMCwjw=="],
 
