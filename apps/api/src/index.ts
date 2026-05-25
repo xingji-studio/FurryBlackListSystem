@@ -1,7 +1,7 @@
-import { createApp } from './lib/http'
-import { env } from './lib/env'
+import { Hono } from 'hono'
+import { mountRoutes } from './lib/http'
 
-export default {
-  port: env.publicPort,
-  fetch: createApp().fetch
-}
+const app = new Hono()
+mountRoutes(app)
+
+export default app

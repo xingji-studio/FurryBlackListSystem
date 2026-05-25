@@ -7,7 +7,7 @@
     "dev:api": "bun run --filter @fbls/api dev",
     "dev:public": "bun run --filter @fbls/public dev",
     "dev:admin": "bun run --filter @fbls/admin dev",
-    "init:api": "bun run --filter @fbls/api seed",
+    "init:api": "bun run --filter @fbls/api schema",
     "build": "bun run --workspaces build",
     "check": "bun run --workspaces check"
   }

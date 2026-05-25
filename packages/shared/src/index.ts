@@ -15,11 +15,9 @@ export const apiPaths = {
   adminDashboard: '/api/admin/dashboard',
   adminLogin: '/api/admin/login',
   adminLogout: '/api/admin/logout',
-  adminExports: '/api/admin/exports',
   adminImages: '/api/admin',
   report: '/api/reports',
-  search: '/api/blacklist/search',
-  sponsorImage: '/api/sponsor-image'
+  search: '/api/blacklist/search'
 } as const
 
 export const clientLinks = {

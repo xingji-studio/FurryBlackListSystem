@@ -11,7 +11,6 @@ const int = (key: string) => {
 }
 
 const databaseUrl = need('DATABASE_URL')
-const databaseFile = databaseUrl.startsWith('file:') ? databaseUrl.slice(5) : ''
 
 export const env = {
   adminPassword: process.env.ADMIN_PASSWORD?.trim() || '',
@@ -19,11 +18,9 @@ export const env = {
   adminTokenMinutes: int('ADMIN_TOKEN_MINUTES'),
   adminUsername: need('ADMIN_USERNAME'),
   databaseAuthToken: process.env.DATABASE_AUTH_TOKEN?.trim() || '',
-  databaseFile,
   databaseUrl,
   jwtSecret: need('JWT_SECRET'),
   maxContentLength: int('MAX_CONTENT_LENGTH'),
-  publicPort: int('PUBLIC_PORT'),
   rateLimitMaxEntries: int('RATE_LIMIT_MAX_ENTRIES')
 }
 

@@ -12,7 +12,7 @@ bun install
 bun run init:api
 ```
 
-默认会在 `apps/api/blacklist.db` 初始化本地数据库。
+默认会准备 `apps/api/blacklist.db` 的数据库结构。
 
 ### 启动服务
 
@@ -38,6 +38,8 @@ bun run dev:admin
 ### 创建后端
 
 - 在 Vercel 创建一个项目，选 Github 仓库
+- Root Directory 设为 `apps/api`
+- Framework Preset 选 Other，Output Directory 留空
 - 填入必要的环境变量，包括 `DATABASE_URL` 和 `DATABASE_AUTH_TOKEN` 等
 
 ### 创建前端

@@ -57,25 +57,6 @@ export const adminApi = {
     setAuth(payload)
     return payload
   },
-  async download(name: string) {
-    const response = await fetch(`${base}${apiPaths.adminExports}/${name}`, {
-      headers: { Authorization: `Bearer ${auth.token}` }
-    })
-    if (response.status === 401) {
-      setAuth(null)
-      throw new Error('登录已失效。')
-    }
-    if (!response.ok) throw new Error(await textOf(response))
-    const blob = await response.blob()
-    const href = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = href
-    link.download =
-      response.headers.get('Content-Disposition')?.match(/filename="(.+)"/)?.[1] ||
-      name
-    link.click()
-    URL.revokeObjectURL(href)
-  },
   logout: () => post('/api/admin/logout', {}),
   approveAppeal: (id: number, admin_note: string) =>
     post(`/api/admin/appeals/${id}/approve`, { admin_note }),

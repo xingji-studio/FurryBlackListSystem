@@ -66,16 +66,6 @@ onMount(() => {
         </p>
       </div>
       <div class="admin-controls">
-        <button class="secondary-button" type="button" onclick={() => adminApi.download('database')}>
-          导出数据库
-        </button>
-        <button
-          class="secondary-button"
-          type="button"
-          onclick={() => adminApi.download('report-traces')}
-        >
-          导出举报溯源文件
-        </button>
         <button class="secondary-button" type="button" onclick={logout}>退出登录</button>
       </div>
     </header>

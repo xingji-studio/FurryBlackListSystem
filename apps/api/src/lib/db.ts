@@ -8,11 +8,6 @@ let ready: Promise<void> | null = null
 
 export const getDb = async () => {
   if (db) return db
-  const fs = await import('node:fs')
-  const path = await import('node:path')
-  if (env.databaseFile) {
-    fs.mkdirSync(path.dirname(env.databaseFile), { recursive: true })
-  }
   const client = createClient({
     url: env.databaseUrl,
     authToken: env.databaseAuthToken || undefined
@@ -21,7 +16,7 @@ export const getDb = async () => {
   return db
 }
 
-export const initDb = async () => {
+export const initSchema = async () => {
   if (ready) return ready
   ready = (async () => {
     const db = await getDb()

@@ -1,4 +1,4 @@
-import { initDb } from '../lib/db'
+import { initSchema } from '../lib/db'
 
-await initDb()
-console.log('database initialized')
+await initSchema()
+console.log('database schema prepared')
