@@ -1,0 +1,14 @@
+{
+  "name": "furry-blacklist-system",
+  "private": true,
+  "packageManager": "bun@1.3.14",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev:api": "bun run --filter @fbls/api dev",
+    "dev:public": "bun run --filter @fbls/public dev",
+    "dev:admin": "bun run --filter @fbls/admin dev",
+    "init:api": "bun run --filter @fbls/api seed",
+    "build": "bun run --workspaces build",
+    "check": "bun run --workspaces check"
+  }
+}

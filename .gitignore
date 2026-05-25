@@ -1,6 +1,5 @@
-.venv/
-__pycache__/
-*.pyc
-.env
-data/
-*.db
+node_modules
+dist
+apps/api/.env
+apps/api/.env.local
+apps/api/blacklist.db

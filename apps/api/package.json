@@ -1,0 +1,26 @@
+{
+  "name": "@fbls/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "build": "tsc --project tsconfig.build.json",
+    "check": "tsc --project tsconfig.json",
+    "seed": "bun src/scripts/seed.ts"
+  },
+  "dependencies": {
+    "@fbls/shared": "workspace:*",
+    "@libsql/client": "^0.17.3",
+    "drizzle-orm": "^0.45.2",
+    "fflate": "^0.8.2",
+    "hono": "^4.10.4",
+    "jose": "^6.1.2",
+    "mime-types": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/mime-types": "^3.0.1",
+    "@types/node": "^25.9.1",
+    "drizzle-kit": "^0.31.7",
+    "typescript": "^6.0.3"
+  }
+}

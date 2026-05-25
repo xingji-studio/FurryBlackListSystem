@@ -1,0 +1,21 @@
+{
+  "name": "@fbls/public",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "check": "tsc --project tsconfig.json"
+  },
+  "dependencies": {
+    "@fbls/shared": "workspace:*",
+    "@mateothegreat/svelte5-router": "^2.16.19",
+    "svelte": "^5.43.2"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.1.2",
+    "@types/node": "^25.9.1",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.14"
+  }
+}
