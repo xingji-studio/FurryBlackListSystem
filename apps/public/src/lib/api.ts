@@ -5,9 +5,28 @@ import {
   type SearchPayload
 } from '@fbls/shared'
 
+const messageFrom = (value: unknown): string | null => {
+  if (typeof value === 'string') {
+    const text = value.trim()
+    return text || null
+  }
+
+  if (value && typeof value === 'object') {
+    const record = value as Record<string, unknown>
+    return (
+      messageFrom(record.message) ||
+      messageFrom(record.error) ||
+      messageFrom(record.cause) ||
+      null
+    )
+  }
+
+  return null
+}
+
 const textOf = async (response: Response) => {
   const payload = await response.json().catch(() => null)
-  return payload?.message || payload?.error || '请求失败。'
+  return messageFrom(payload) || '请求失败。'
 }
 
 export const publicApi = {
@@ -34,9 +53,9 @@ export const publicApi = {
     const response = await fetch(`${apiPaths.search}?${query}`, {
       headers: { Accept: 'application/json' }
     })
-    const payload = (await response.json()) as SearchPayload & { error?: string }
+    const payload = (await response.json()) as SearchPayload & { error?: unknown; message?: unknown }
     if (!response.ok || !payload.success) {
-      throw new Error(payload.error || '查询失败。')
+      throw new Error(messageFrom(payload) || '查询失败。')
     }
     return payload.entry
       ? { ...payload, entry: localizeTimeFields(payload.entry) }
