@@ -19,6 +19,7 @@ export const env = {
   adminPasswordHash: process.env.ADMIN_PASSWORD_HASH?.trim() || '',
   adminTokenMinutes: int('ADMIN_TOKEN_MINUTES', 10),
   adminUsername: need('ADMIN_USERNAME'),
+  checkCode: need('CHECK_CODE'),
   databaseAuthToken: process.env.DATABASE_AUTH_TOKEN?.trim() || '',
   databaseUrl,
   jwtSecret: need('JWT_SECRET'),

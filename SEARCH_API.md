@@ -18,7 +18,7 @@ https://furry.report/api/blacklist/search
 调用查询接口时，必须提供 `check_code` 参数。
 
 - `check_code` 必须是数字
-- `check_code` 必须与校验码完全一致
+- `check_code` 必须与后端环境变量 `CHECK_CODE` 完全一致
 - 不一致时接口会返回错误，无法查询
 
 ## 请求参数
@@ -29,7 +29,7 @@ https://furry.report/api/blacklist/search
 | --- | --- | --- | --- |
 | `platform` | string | 是 | 平台名称 |
 | `account_id` | string | 是 | 账号名或账号 ID |
-| `check_code` | string | 是 | 查询校验码，必须与根目录 `cpwd.txt` 一致 |
+| `check_code` | string | 是 | 查询校验码，必须与后端环境变量 `CHECK_CODE` 一致 |
 
 ### `platform` 可选值
 

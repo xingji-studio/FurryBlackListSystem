@@ -12,6 +12,8 @@ bun install
 bun run init:api
 ```
 
+请在 `apps/api/.env` 中配置 `CHECK_CODE`，查询接口会要求调用方提供相同校验码。
+
 默认会准备 `apps/api/blacklist.db` 的数据库结构。
 
 ### 启动服务

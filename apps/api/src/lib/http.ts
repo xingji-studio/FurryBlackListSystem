@@ -1,9 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { HTTPException } from 'hono/http-exception'
-import { readFile } from 'node:fs/promises'
-import { dirname, join, parse, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { env } from './env'
 import { readAdminToken, signAdminToken, verifyAdmin } from './auth'
 import { checkRate } from './rate'
@@ -36,26 +33,6 @@ import {
 import { writeTrace } from './trace'
 
 const rateMessage = '请求过于频繁，请稍后再试。'
-const moduleDir = dirname(fileURLToPath(import.meta.url))
-
-const candidateCheckCodePaths = (start: string) => {
-  const paths: string[] = []
-  let current = resolve(start)
-  const { root } = parse(current)
-
-  while (true) {
-    paths.push(join(current, 'cpwd.txt'))
-    if (current === root) break
-    current = dirname(current)
-  }
-
-  return paths
-}
-
-const checkCodePaths = [
-  ...candidateCheckCodePaths(process.cwd()),
-  ...candidateCheckCodePaths(moduleDir)
-].filter((path, index, list) => list.indexOf(path) === index)
 
 const bytesOf = (base64: string) =>
   typeof Buffer !== 'undefined'
@@ -82,23 +59,8 @@ const replyError = (error: unknown, fallback: string) =>
     ? fail(rateMessage, 429)
     : fail(error instanceof Error ? error.message : fallback)
 
-const readCheckCode = async () => {
-  for (const path of checkCodePaths) {
-    try {
-      const content = await readFile(path, 'utf8')
-      const code = content.trim()
-      if (!code) throw new Error('校验码配置为空。')
-      return code
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
-    }
-  }
-  throw new Error('未找到校验码配置文件。')
-}
-
 const verifyCheckCode = async (value: string) => {
-  const expected = await readCheckCode()
-  if (value !== expected) {
+  if (value !== env.checkCode) {
     throw new Error('校验码错误。')
   }
 }
