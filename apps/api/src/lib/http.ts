@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { HTTPException } from 'hono/http-exception'
 import { readFile } from 'node:fs/promises'
-import { dirname, resolve } from 'node:path'
+import { dirname, join, parse, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { env } from './env'
 import { readAdminToken, signAdminToken, verifyAdmin } from './auth'
@@ -37,11 +37,25 @@ import { writeTrace } from './trace'
 
 const rateMessage = '请求过于频繁，请稍后再试。'
 const moduleDir = dirname(fileURLToPath(import.meta.url))
+
+const candidateCheckCodePaths = (start: string) => {
+  const paths: string[] = []
+  let current = resolve(start)
+  const { root } = parse(current)
+
+  while (true) {
+    paths.push(join(current, 'cpwd.txt'))
+    if (current === root) break
+    current = dirname(current)
+  }
+
+  return paths
+}
+
 const checkCodePaths = [
-  resolve(process.cwd(), 'cpwd.txt'),
-  resolve(moduleDir, '../../../../cpwd.txt'),
-  resolve(moduleDir, '../../../cpwd.txt')
-]
+  ...candidateCheckCodePaths(process.cwd()),
+  ...candidateCheckCodePaths(moduleDir)
+].filter((path, index, list) => list.indexOf(path) === index)
 
 const bytesOf = (base64: string) =>
   typeof Buffer !== 'undefined'
