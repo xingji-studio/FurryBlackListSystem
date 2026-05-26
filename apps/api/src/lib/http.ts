@@ -1,6 +1,9 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { HTTPException } from 'hono/http-exception'
+import { readFile } from 'node:fs/promises'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { env } from './env'
 import { readAdminToken, signAdminToken, verifyAdmin } from './auth'
 import { checkRate } from './rate'
@@ -22,6 +25,7 @@ import {
 } from './repo'
 import {
   validateAccount,
+  validateCheckCode,
   validateAgreement,
   validateDescription,
   validateEvidence,
@@ -32,6 +36,12 @@ import {
 import { writeTrace } from './trace'
 
 const rateMessage = '请求过于频繁，请稍后再试。'
+const moduleDir = dirname(fileURLToPath(import.meta.url))
+const checkCodePaths = [
+  resolve(process.cwd(), 'cpwd.txt'),
+  resolve(moduleDir, '../../../../cpwd.txt'),
+  resolve(moduleDir, '../../../cpwd.txt')
+]
 
 const bytesOf = (base64: string) =>
   typeof Buffer !== 'undefined'
@@ -57,6 +67,27 @@ const replyError = (error: unknown, fallback: string) =>
   error instanceof Error && error.message === 'RATE_LIMIT'
     ? fail(rateMessage, 429)
     : fail(error instanceof Error ? error.message : fallback)
+
+const readCheckCode = async () => {
+  for (const path of checkCodePaths) {
+    try {
+      const content = await readFile(path, 'utf8')
+      const code = content.trim()
+      if (!code) throw new Error('校验码配置为空。')
+      return code
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+    }
+  }
+  throw new Error('未找到校验码配置文件。')
+}
+
+const verifyCheckCode = async (value: string) => {
+  const expected = await readCheckCode()
+  if (value !== expected) {
+    throw new Error('校验码错误。')
+  }
+}
 
 const auth = async (request: Request) => {
   const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
@@ -102,6 +133,8 @@ export const mountRoutes = (api: Hono) => {
       await checkRate('api_search', 60, 300, c.req.raw)
       const platform = validatePlatform(c.req.query('platform') || '')
       const accountId = validateAccount(c.req.query('account_id') || '')
+      const checkCode = validateCheckCode(c.req.query('check_code') || '')
+      await verifyCheckCode(checkCode)
       const entry = await searchBlacklist(
         `${new URL(c.req.url).origin}`,
         platform,
@@ -133,6 +166,8 @@ export const mountRoutes = (api: Hono) => {
       const body = await c.req.json()
       const platform = validatePlatform(String(body.platform || ''))
       const accountId = validateAccount(String(body.account_id || ''))
+      const checkCode = validateCheckCode(String(body.check_code || ''))
+      await verifyCheckCode(checkCode)
       const entry = await searchBlacklist(
         `${new URL(c.req.url).origin}`,
         platform,

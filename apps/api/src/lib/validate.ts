@@ -42,6 +42,15 @@ export const validateAccount = (value: string) => {
   return normalized
 }
 
+export const validateCheckCode = (value: string) => {
+  const normalized = clean(value)
+  if (!normalized) throw new Error('校验码不能为空。')
+  if (!/^\d+$/.test(normalized)) {
+    throw new Error('校验码格式无效。')
+  }
+  return normalized
+}
+
 export const validateDescription = (value: string) => {
   const normalized = value.trim()
   if (!normalized) throw new Error('描述不能为空。')

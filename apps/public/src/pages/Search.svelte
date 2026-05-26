@@ -6,6 +6,7 @@ import { setFlash } from '../lib/state.svelte'
 
 let platform = $state('')
 let accountId = $state('')
+let checkCode = $state('')
 let result = $state<SearchPayload | null>(null)
 let loading = $state(false)
 
@@ -15,7 +16,7 @@ const submit = async (event: SubmitEvent) => {
   result = null
   setFlash(null)
   try {
-    result = await publicApi.search(platform, accountId)
+    result = await publicApi.search(platform, accountId, checkCode)
   } catch (error) {
     setFlash(messageOf('error', error instanceof Error ? error.message : '查询失败。'))
   } finally {
@@ -49,6 +50,10 @@ const submit = async (event: SubmitEvent) => {
 
     <label>账号名 / 账号 ID
       <input bind:value={accountId} type="text" placeholder="例如：user_12345" required />
+    </label>
+
+    <label>校验码
+      <input bind:value={checkCode} type="text" inputmode="numeric" placeholder="请输入校验码" required />
     </label>
 
     <button class="primary-button" type="submit">
