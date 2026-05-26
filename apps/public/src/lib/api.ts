@@ -29,7 +29,7 @@ export const publicApi = {
     if (!response.ok) throw new Error(await textOf(response))
     return textOf(response)
   },
-  async search(platform: string, accountId: string) {
+  async search(platform: string, accountId: string, checkCode: string) {
     const query = new URLSearchParams({ platform, account_id: accountId, check_code: checkCode })
     const response = await fetch(`${apiPaths.search}?${query}`, {
       headers: { Accept: 'application/json' }
