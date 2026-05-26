@@ -1,5 +1,4 @@
 <script lang="ts">
-import { route } from '@mateothegreat/svelte5-router'
 import { clientLinks, platforms, threatLevels } from '@fbls/shared'
 import { publicApi, messageOf } from '../lib/api'
 import { setFlash } from '../lib/state.svelte'
@@ -33,7 +32,7 @@ const submit = async (event: SubmitEvent) => {
   for (const file of files ? [...files] : []) body.append('images', file)
 
   try {
-    setFlash(messageOf('success', await publicApi.report(body)))
+    await publicApi.report(body)
     form = {
       account_id: '',
       description: '',
@@ -44,6 +43,7 @@ const submit = async (event: SubmitEvent) => {
     }
     files = null
     formElement.reset()
+    window.location.assign('/success?type=report')
   } catch (error) {
     setFlash(messageOf('error', error instanceof Error ? error.message : '提交失败。'))
   } finally {

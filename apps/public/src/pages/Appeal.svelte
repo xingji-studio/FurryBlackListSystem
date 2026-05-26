@@ -1,5 +1,4 @@
 <script lang="ts">
-import { route } from '@mateothegreat/svelte5-router'
 import { clientLinks, platforms } from '@fbls/shared'
 import { publicApi, messageOf } from '../lib/api'
 import { setFlash } from '../lib/state.svelte'
@@ -18,15 +17,10 @@ const submit = async (event: SubmitEvent) => {
   submitting = true
   setFlash(null)
   try {
-    setFlash(
-      messageOf(
-        'success',
-        await publicApi.appeal({
-          ...form,
-          license_agreement: form.license_agreement ? 'yes' : 'no'
-        })
-      )
-    )
+    await publicApi.appeal({
+      ...form,
+      license_agreement: form.license_agreement ? 'yes' : 'no'
+    })
     form = {
       account_id: '',
       description: '',
@@ -34,6 +28,7 @@ const submit = async (event: SubmitEvent) => {
       license_agreement: false,
       platform: ''
     }
+    window.location.assign('/success?type=appeal')
   } catch (error) {
     setFlash(messageOf('error', error instanceof Error ? error.message : '提交失败。'))
   } finally {

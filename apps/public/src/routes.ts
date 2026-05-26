@@ -5,7 +5,8 @@ export const routes = [
   { component: async () => import('./pages/Home.svelte') },
   { path: 'report', component: async () => import('./pages/Report.svelte') },
   { path: 'search', component: async () => import('./pages/Search.svelte') },
-  { path: 'appeal', component: async () => import('./pages/Appeal.svelte') }
+  { path: 'appeal', component: async () => import('./pages/Appeal.svelte') },
+  { path: 'success', component: async () => import('./pages/Success.svelte') }
 ]
 
 export const routerConfig = {
