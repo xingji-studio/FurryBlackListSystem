@@ -2,8 +2,6 @@ import type { AuthPayload, DashboardPayload, FlashMessage } from '@fbls/shared'
 import { apiPaths, localizeTimeFields } from '@fbls/shared'
 import { auth, setAuth } from './auth.svelte'
 
-const base = (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, '') || ''
-
 const textOf = async (response: Response) => {
   const payload = await response.json().catch(() => null)
   return payload?.message || payload?.error || '请求失败。'
@@ -15,7 +13,7 @@ const headers = () => ({
 })
 
 const post = async (path: string, body: unknown, withAuth = true) => {
-  const response = await fetch(`${base}${path}`, {
+  const response = await fetch(path, {
     method: 'POST',
     headers: withAuth ? headers() : { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
@@ -30,7 +28,7 @@ const post = async (path: string, body: unknown, withAuth = true) => {
 
 export const adminApi = {
   async dashboard() {
-    const response = await fetch(`${base}${apiPaths.adminDashboard}`, {
+    const response = await fetch(apiPaths.adminDashboard, {
       headers: { Authorization: `Bearer ${auth.token}` }
     })
     if (response.status === 401) {
@@ -47,7 +45,7 @@ export const adminApi = {
     }
   },
   async login(username: string, password: string) {
-    const response = await fetch(`${base}${apiPaths.adminLogin}`, {
+    const response = await fetch(apiPaths.adminLogin, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
